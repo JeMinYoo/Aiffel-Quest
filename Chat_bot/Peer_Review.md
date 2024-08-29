@@ -16,7 +16,9 @@
     4. 대답을 얻는 예측 함수를 만들었다.
  
     * 코드 첨부:
+  
     1-1.
+  
       ```
         # 데이터 로드
         data = pd.read_csv('ChatbotData.csv')
@@ -33,16 +35,20 @@
             return text
         ...
       ```
+
     1-2.
+  
       ```
       # TensorFlow Datasets SubwordTextEncoder를 사용하여 토크나이저 정의
       tokenizer = tfds.deprecated.text.SubwordTextEncoder.build_from_corpus(
           train_data['Q'].tolist() + train_data['A'].tolist(), target_vocab_size=2**13)
       ```
+
     2. 학습 시 안정적 수렴: 학습량이 적어 수치로는 평가하기 어려우나, 검증손실이 점차 감소해 1.1이하로 떨어지며 안정적으로 학습했음을 알 수 있다. 
       <img width="934" alt="스크린샷 2024-08-24 오후 9 24 23" src="https://github.com/user-attachments/assets/bca5d61c-140d-47c3-8df1-9748c2220661">
       
     3. 맥락에 맞는 답변: 맥락에 맞는 답을 얻는 데 성공했다. (존재하는 이슈가 있다면 답변의 반복과 항상 맥락에 맞지는 않는다는 점이 있겠다.)
+
       ```
         입력 : 사내커플인데 비밀연애임 답답해
         출력 : 헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다헤어진다
@@ -52,6 +58,7 @@
       ```
       
     5. 예측함수 decoder_inference() (원문 코드에는 주석과 함께 작성됨)
+
       ```
       def decoder_inference(sentence):
       sentence = preprocess_sentence(sentence)
@@ -92,6 +99,7 @@
 
     * 코드:
     1. 추가 전처리: KoNLPY 패키지의 Okt 모듈을 사용하여 한글 전처리
+
       ```
       # 형태소 분석 및 불용어 제거
         okt = Okt()
@@ -107,6 +115,7 @@
       ```
 
     2. CustomSchedule 클래스에 get_config 모델을 추가
+
       ```
         class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
             def __init__(self, d_model, warmup_steps=4000):
@@ -142,11 +151,15 @@
                 loss.backward()
                 optimizer.step()
       ```
+
       그 결과 예측을 생성한 바 있으며,
+  
       ```
       챗봇:  안녕하면 좋은 아니까요.
       ```
+
       성능개선을 위한 다음을 포함한 시도가 기록되어 있다.
+  
       ```
         # 입력과 출력 데이터를 하나의 텍스트로 결합, [BOS]와 [EOS] 토큰 사용
         df['input_output'] = "[BOS] " + df['Q'] + " [SEP] " + df['A'] + " [EOS]"
@@ -168,7 +181,9 @@
             def __getitem__(self, idx):
                 return torch.tensor(self.tokens[idx], dtype=torch.long)
       ```
+
       다음과 같은 결과를 얻었음을 확인할 수 있다.
+
       ```
         사용자: 오늘 날씨는 어때?
         챗봇:  오늘 날씨는 것도 좋
@@ -191,8 +206,10 @@
         사용자: 여행을 가고 싶은데 어디가 좋을까?
         챗봇:  사랑�
       ```
+
       이 이후에도 특수문자 제거, 공백 처리, 텍스트 추가적 토큰화, max_length 조정 등 추가적 시도가 이뤄지고 있음이 기록되어 있다.
       최종 결과는 다음과 같으며 약간 개선되었음을 확인 가능하다.
+
       ```
         사용자: 오늘 날씨는 어때?
         챗봇:  저는 거예요. 
